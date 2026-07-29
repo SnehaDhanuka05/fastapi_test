@@ -4,6 +4,8 @@ from datetime import datetime
 import mysql.connector
 import base64
 from functools import cache
+import time
+from pathlib import Path
 
 app = FastAPI()
 
@@ -23,6 +25,9 @@ class Post(BaseModel):
 async def root():
     return {"message":"is this working"}
 
+BASE_DIR = Path(__file__).resolve().parent
+IMAGE_DIR = BASE_DIR / "images"
+
 @app.get("/posts")
 async def get_posts():
     connection = mysql.connector.connect(
@@ -39,17 +44,25 @@ async def get_posts():
     cur.execute("INSERT INTO posts(post_id, title, content, image_url, created_at, likes) VALUES (1, 'best food in town', 'awesome restaurants to try!', '/Users/sneha/fastapi/images.jpeg', NOW(), 5)")
     posts=cur.execute("SELECT * FROM posts")
     posts=cur.fetchall()
-    encoded_posts=[]
+    
     image_urls=[]
     image_urls=cur.execute("SELECT image_url FROM posts")
     image_urls=cur.fetchall()
     print(image_urls)
-    encoded_posts.append(await convert_base64(image_urls[0][0]))
+
+    start_time = time.time()
+    encoded_posts=[]
+    for urls in IMAGE_DIR.iterdir():
+        encoded_posts.append(await convert_base64(urls))
+    end_time = time.time()
+
+    print(f"Time taken: {end_time - start_time}")
+
     return {"posts": encoded_posts}
 
 #could we use caching to make it fast? SQLAlchemy?
 
-@cache
+#@cache
 async def convert_base64(image_url: str):
     print("converting to base64")
     print(image_url)
