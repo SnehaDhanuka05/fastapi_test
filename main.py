@@ -10,6 +10,7 @@ try:
     connection = mysql.connector.connect(
         host="localhost",
         user="root",
+        port=3306,
         password="1234",
         database="test_1"
     )
@@ -17,6 +18,18 @@ try:
 
 except mysql.connector.Error as err:
     print(f"Error connecting to MySQL database: {err}")
+
+cur = connection.cursor()
+
+# Execute a query
+cur.execute("SELECT * FROM posts")
+
+# Fetch one result
+row = cur.fetchall()
+print(row)
+
+# Close connection
+#connection.close()
 
 class Post(BaseModel):
     post_id:int
