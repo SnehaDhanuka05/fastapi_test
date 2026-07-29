@@ -22,9 +22,6 @@ except mysql.connector.Error as err:
 
 
 
-# Execute a query
-cur.execute("SELECT * FROM posts")
-
 # Fetch one result
 row = cur.fetchall()
 print(row)
@@ -46,6 +43,8 @@ async def root():
 
 @app.get("/posts")
 async def get_posts(post:Post):
+    posts=cur.execute("SELECT * FROM posts")
+    posts=cur.fetchall()
     #encoded_post = base64.b64encode(post.json())
     return post
     
