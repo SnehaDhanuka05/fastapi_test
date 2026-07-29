@@ -44,7 +44,7 @@ async def get_posts(post:Post):
     for post in posts:
         encoded_posts=convert_base64(post)
     return {"posts":encoded_posts}
-
+#could we use caching to make it fast? 
 
 
 async def convert_base64(post:Post):
