@@ -45,6 +45,9 @@ async def root():
 async def get_posts(post:Post):
     posts=cur.execute("SELECT * FROM posts")
     posts=cur.fetchall()
-    #encoded_post = base64.b64encode(post.json())
-    return post
     
+    return post
+
+async def convert_base64(post:Post):
+    encoded_post=base64.b64encode(post.encode('utf-8'))
+    return encoded_post
