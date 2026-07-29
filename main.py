@@ -3,14 +3,13 @@ from pydantic import BaseModel
 from datetime import datetime
 import mysql.connector
 import base64
+from functools import cache
 
 app = FastAPI()
 
-
-
-
 # Close connection
 #connection.close()
+#do we use this block?
 
 class Post(BaseModel):
     post_id:int
@@ -34,7 +33,7 @@ async def get_posts():
         database="sys"
         )
     print("Connected to MySQL database")
-
+    #removed try and except, connection was showing as undefined variable
     cur = connection.cursor()
     posts=cur.execute("SELECT * FROM posts")
     posts=cur.fetchall()
@@ -43,9 +42,9 @@ async def get_posts():
         encoded_posts.append(await convert_base64(post))
     return {"posts":encoded_posts}
 
-#could we use caching to make it fast? SQLAlchemy
+#could we use caching to make it fast? SQLAlchemy?
 
-
+@cache
 async def convert_base64(post:Post):
     encoded_post=await(base64.b64encode(post.encode('utf-8')))
     return encoded_post
