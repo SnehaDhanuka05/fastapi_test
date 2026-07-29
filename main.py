@@ -15,11 +15,12 @@ try:
         database="test_1"
     )
     print("Connected to MySQL database")
+    cur = connection.cursor()
 
 except mysql.connector.Error as err:
     print(f"Error connecting to MySQL database: {err}")
 
-cur = connection.cursor()
+
 
 # Execute a query
 cur.execute("SELECT * FROM posts")
