@@ -6,19 +6,6 @@ import base64
 
 app = FastAPI()
 
-try:
-    connection = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        port=3306,
-        password="1234",
-        database="test_1"
-    )
-    print("Connected to MySQL database")
-    cur = connection.cursor()
-
-except mysql.connector.Error as err:
-    print(f"Error connecting to MySQL database: {err}")
 
 
 
@@ -38,15 +25,27 @@ async def root():
     return {"message":"is this working"}
 
 @app.get("/posts")
-async def get_posts(post:Post):
+async def get_posts():
+    connection = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        port=3306,
+        password="1234",
+        database="sys"
+        )
+    print("Connected to MySQL database")
+
+    cur = connection.cursor()
     posts=cur.execute("SELECT * FROM posts")
     posts=cur.fetchall()
+    encoded_posts=[]
     for post in posts:
-        encoded_posts=convert_base64(post)
+        encoded_posts.append(await convert_base64(post))
     return {"posts":encoded_posts}
-#could we use caching to make it fast? 
+
+#could we use caching to make it fast? SQLAlchemy
 
 
 async def convert_base64(post:Post):
-    encoded_post=base64.b64encode(post.encode('utf-8'))
+    encoded_post=await(base64.b64encode(post.encode('utf-8')))
     return encoded_post
