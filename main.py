@@ -22,10 +22,6 @@ except mysql.connector.Error as err:
 
 
 
-# Fetch one result
-row = cur.fetchall()
-print(row)
-
 # Close connection
 #connection.close()
 
@@ -45,8 +41,11 @@ async def root():
 async def get_posts(post:Post):
     posts=cur.execute("SELECT * FROM posts")
     posts=cur.fetchall()
-    
-    return post
+    for post in posts:
+        encoded_posts=convert_base64(post)
+    return {"posts":encoded_posts}
+
+
 
 async def convert_base64(post:Post):
     encoded_post=base64.b64encode(post.encode('utf-8'))
