@@ -55,8 +55,16 @@ async def get_posts():
 
     start_time = time.time()
     encoded_posts=[]
-    for urls in image_urls:
-        encoded_posts.append(await asyncio.gather(convert_base64(urls[0])))
+    # for urls in image_urls:
+    #     encoded_posts.append(await asyncio.gather(convert_base64(urls[0])))
+    tasks=[]
+    async with asyncio.TaskGroup() as tg:
+        for urls in image_urls:
+            task=tg.create_task(convert_base64(urls[0]))
+            tasks.append(task)
+
+    encoded_posts=[task.result() for task in tasks]
+
     end_time = time.time()
 
     print(f"Time taken: {end_time - start_time}")
