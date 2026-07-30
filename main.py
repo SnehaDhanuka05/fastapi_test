@@ -60,8 +60,11 @@ async def get_posts():
     tasks=[]
     async with asyncio.TaskGroup() as tg:
         for urls in image_urls:
-            task=tg.create_task(convert_base64(urls[0]))
-            tasks.append(task)
+            if urls.is_file():
+                task=tg.create_task(convert_base64(urls[0]))
+                tasks.append(task)
+            else:
+                print(f"image dont exist: {urls[0]}")    
 
     encoded_posts=[task.result() for task in tasks]
 
