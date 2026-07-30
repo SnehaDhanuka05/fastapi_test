@@ -25,8 +25,8 @@ class Post(BaseModel):
 async def root():
     return {"message":"is this working"}
 
-BASE_DIR = Path(__file__).resolve().parent
-IMAGE_DIR = BASE_DIR / "images"
+
+image_dir = Path("/Users/sneha/fastapi/images")
 
 @app.get("/posts")
 async def get_posts():
@@ -52,7 +52,7 @@ async def get_posts():
 
     start_time = time.time()
     encoded_posts=[]
-    for urls in IMAGE_DIR.iterdir():
+    for urls in image_dir.iterdir():
         encoded_posts.append(await convert_base64(urls))
     end_time = time.time()
 
