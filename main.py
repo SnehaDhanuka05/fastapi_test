@@ -44,7 +44,24 @@ async def get_posts():
     cur.execute("INSERT INTO posts(post_id, title, content, image_url, created_at, likes) VALUES (1, 'best food in town', 'awesome restaurants to try!', '/Users/sneha/fastapi/images.jpeg', NOW(), 5)")
     posts=cur.execute("SELECT * FROM posts")
     posts=cur.fetchall()
-    
+
+#used AI to get this block of code to bulk insert urls in the table
+    for i, image_path in enumerate(image_dir.iterdir(), start=2):
+        if image_path.is_file():
+            cur.execute(
+            """
+            INSERT INTO posts (post_id, title, content, image_url, created_at, likes)
+            VALUES (%s, %s, %s, %s, NOW(), %s)
+            """,
+            (
+                i,
+                f"Image {i}",
+                "Image from folder",
+                str(image_path),   # or image_path.name
+                0
+            )
+        )
+
     image_urls=[]
     image_urls=cur.execute("SELECT image_url FROM posts")
     image_urls=cur.fetchall()
@@ -53,6 +70,7 @@ async def get_posts():
     start_time = time.time()
     encoded_posts=[]
     for urls in image_dir.iterdir():
+        print(urls)
         encoded_posts.append(await convert_base64(urls))
     end_time = time.time()
 
@@ -61,10 +79,11 @@ async def get_posts():
     return {"posts": encoded_posts}
 
 #could we use caching to make it fast? SQLAlchemy?
+#for stale cache, we can use TTL ofc but also learnt about Debezium. uses kafka to stream chnages from logs of db
+#for mysql, aiomysql can be used
 
 #@cache
 async def convert_base64(image_url: str):
-    print("converting to base64")
     print(image_url)
     with open(image_url, "rb") as img:
         s=base64.b64encode(img.read()).decode("utf-8")
