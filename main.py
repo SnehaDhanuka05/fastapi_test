@@ -114,11 +114,12 @@ async def load_image(url:str):
     image_data=await fetch_image_from_db(url)
     return image_data
 
-@app.get("/image/{url}")
 async def get_image(url:str):
     return await load_image(url)
     
-@app.put("/image/{url}")
+
 async def update_image(url:str):
     if load_image.cache.has(url):
-        
+        url.mtime!=load_image.cache.get(url).mtime
+        load_image.cache.delete(url)
+
