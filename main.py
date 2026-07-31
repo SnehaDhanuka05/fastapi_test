@@ -7,12 +7,15 @@ from functools import cache
 import time
 from pathlib import Path
 import asyncio
+import os
 
 app = FastAPI()
 
 # Close connection
 #connection.close()
 #do we use this block?
+
+cache ={}
 
 class Post(BaseModel):
     post_id:int
@@ -46,9 +49,7 @@ async def get_posts():
     #posts=cur.execute("SELECT * FROM posts")
     #posts=cur.fetchall()
 
- #used AI to get this block of code to bulk insert urls in the table
     
-
     image_urls=[]
     image_urls=cur.execute("SELECT image_url FROM new_post")
     image_urls=cur.fetchall()
@@ -60,14 +61,13 @@ async def get_posts():
     tasks=[]
     async with asyncio.TaskGroup() as tg:
         for urls in image_urls:
-            if urls.is_file():
+            if os.path.exists(urls[0]):
                 task=tg.create_task(convert_base64(urls[0]))
                 tasks.append(task)
             else:
                 print(f"image dont exist: {urls[0]}")    
 
     encoded_posts=[task.result() for task in tasks]
-
     end_time = time.time()
 
     print(f"Time taken: {end_time - start_time}")
@@ -84,3 +84,9 @@ async def convert_base64(image_url: str):
     with open(image_url, "rb") as img:
         s=base64.b64encode(img.read()).decode("utf-8")
     return s
+
+# async def get_cached_images(image_urls):
+#     cached_images = []
+#     for url in image_urls:
+#         cached_images.append(cache[url])
+#     return cached_images
