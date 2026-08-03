@@ -31,7 +31,7 @@ def get_dfs(document, path="root"):
             get_dfs(item, [{index}])
     #the node is a primitive value
     else:
-        return (f"{document}")
+        return print (document)
 
 get_dfs(document)
 
@@ -122,7 +122,3 @@ get_dfs(document)
 #     }
 #     result = collection.insert_one(insert_this)
 #     return {"inserted_id": str(result.inserted_id)}
-
-
-    
-
