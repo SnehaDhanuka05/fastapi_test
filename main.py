@@ -20,7 +20,7 @@ print("total content of tree", document)
 #             return fetch_documents(doc)
 
 @app.get("/dfs")
-def get_dfs(document, path="root"):
+async def get_dfs(document, path="root"):
     #if the node is a dict
     if isinstance(document, dict):
         for key, value in document.items():
