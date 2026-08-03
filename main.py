@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import pymongo
+import asyncio
 
 app = FastAPI()
 
@@ -19,19 +20,23 @@ print("total content of tree", document)
 #         for doc in docs.children:
 #             return fetch_documents(doc)
 
-@app.get("/dfs")
+@app.get("/dfs/{path}") 
 async def get_dfs(document, path="root"):
     #if the node is a dict
     if isinstance(document, dict):
         for key, value in document.items():
-            get_dfs(value, {key})
+            doc_task=asyncio.create_task(get_dfs(value, {key}))
     #if the node is a list 
     elif isinstance(document, list):
         for index, item in enumerate(document):
-            get_dfs(item, [{index}])
-    #the node is a primitive value
+            list_task=asyncio.create_task(get_dfs(item, [{index}]))
+    #the node is a string/integer value
     else:
-        return print (document)
+        value_task=asyncio.create_task(print(document, path))
+
+    result=await asyncio.gather(doc_task, list_task, value_task)
+    #when i was just printing the result, it was working. now its showing 404
+    return result
 
 get_dfs(document)
 
