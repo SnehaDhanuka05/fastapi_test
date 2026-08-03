@@ -32,7 +32,7 @@ def get_dfs(document, path=None):
                 #results.append({"path": path + [key], "value": str(value)})
                 yield {"path": path + [key], "value": str(value)}
             else:
-                #results.extend(await get_dfs(value, path + [key]))
+                #results.extend(get_dfs(value, path + [key]))
                 path.append(key)
                 yield from get_dfs(value, path)
                 path.pop()
@@ -45,19 +45,16 @@ def get_dfs(document, path=None):
     #the node is a string/integer value
     else:
         #results.append({"path": path, "value": document})
-        yield {"path": list(path), "value ": document}
+        yield {"path": path, "value ": document}
 
     #return results
        
 
 @app.get("/dfs") 
 async def print_dfs():
-    start_time =time.time()
     doc=collection.find_one()
-    result = list(get_dfs(doc)) 
-    end_time = time.time()
-    print(f"Time taken: {end_time - start_time}")
-    return result
+    return get_dfs(doc)
+     
 
 
 
