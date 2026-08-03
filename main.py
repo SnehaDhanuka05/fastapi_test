@@ -1,14 +1,14 @@
+from bson import ObjectId
 from fastapi import FastAPI
 import pymongo
 import asyncio
+import time
 
 app = FastAPI()
 
 client = pymongo.MongoClient("mongodb://localhost:27017/")
 db = client["test_posts"]
 collection = db["task1"]
-document = collection.find_one()
-print("total content of tree", document)
 
 
 # @app.get("/total_content")
@@ -20,25 +20,47 @@ print("total content of tree", document)
 #         for doc in docs.children:
 #             return fetch_documents(doc)
 
-@app.get("/dfs/{path}") 
-async def get_dfs(document, path="root"):
+start_time =time.time()
+def get_dfs(document, path=None):
+    if path is None:
+        path=[]
+    #results =[]
     #if the node is a dict
     if isinstance(document, dict):
         for key, value in document.items():
-            doc_task=asyncio.create_task(get_dfs(value, {key}))
+            if key == "_id" and isinstance(value, ObjectId):
+                #results.append({"path": path + [key], "value": str(value)})
+                yield {"path": path + [key], "value": str(value)}
+            else:
+                #results.extend(await get_dfs(value, path + [key]))
+                path.append(key)
+                yield from get_dfs(value, path)
+                path.pop()
     #if the node is a list 
+
     elif isinstance(document, list):
         for index, item in enumerate(document):
-            list_task=asyncio.create_task(get_dfs(item, [{index}]))
+            #results.extend(get_dfs(item, path + [index]))
+            yield from get_dfs(item, path )
     #the node is a string/integer value
     else:
-        value_task=asyncio.create_task(print(document, path))
+        #results.append({"path": path, "value": document})
+        yield {"path": list(path), "value ": document}
 
-    result=await asyncio.gather(doc_task, list_task, value_task)
-    #when i was just printing the result, it was working. now its showing 404
+    #return results
+       
+
+@app.get("/dfs") 
+async def print_dfs():
+    start_time =time.time()
+    doc=collection.find_one()
+    result = list(get_dfs(doc)) 
+    end_time = time.time()
+    print(f"Time taken: {end_time - start_time}")
     return result
 
-get_dfs(document)
+
+
 
 # @app.post("/insert")
 # def insert_document():
