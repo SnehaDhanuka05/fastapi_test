@@ -2,7 +2,7 @@ from bson import ObjectId
 from fastapi import FastAPI
 import pymongo
 import asyncio
-import time
+import mysql.connector
 
 app = FastAPI()
 
@@ -10,55 +10,78 @@ client = pymongo.MongoClient("mongodb://localhost:27017/")
 db = client["test_posts"]
 collection = db["task1"]
 
+connection = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        port=3306,
+        password="1234",
+        database="fastapi_task"
+        )
+print("Connected to MySQL database")
+cur = connection.cursor()
+ 
 
-# @app.get("/total_content")
-# def fetch_documents():
-#     docs = list(collection.find())
-#     if not docs:
-#         return {"message": "No documents found in the collection."}
+@app.get("/shippingDetails/{orderId}")
+def get_shippingDetails(orderId: str):
+    cur.execute("SELECT * FROM address WHERE orderId = %s ",(orderId,))
+    address = cur.fetchone()
+    cur.execute("SELECT * FROM method WHERE orderId = %s" ,(orderId,))
+    method = cur.fetchone()
+    shippingDetails = {
+        "address": address,
+        "method": method
+    }
+    return shippingDetails
+
+@app.get("/orders")
+async def get_all_orders():
+    orders=collection.find({})
+    order_list=[]
+    for order in orders:
+        order['_id'] = str(order['_id'])  # Convert ObjectId to string
+        order_list.append(order)
+
+    for order in order_list:
+        orderId = order.get("orderId")
+        if orderId:
+            shippingDetails = get_shippingDetails(orderId)
+            order["shippingDetails"] = shippingDetails   
+             
+    return order_list
+
+
+
+# def get_dfs(document, path=None):
+#     if path is None:
+#         path=[]
+#     #results =[]
+#     #if the node is a dict
+#     if isinstance(document, dict):
+#         for key, value in document.items():
+#             if key == "_id" and isinstance(value, ObjectId):
+#                 #results.append({"path": path + [key], "value": str(value)})
+#                 yield {"path": path + [key], "value": str(value)}
+#                 #yield str(value)
+#             else:
+#                 #results.extend(get_dfs(value, path + [key]))
+#                 path.append(key)
+#                 yield from get_dfs(value, path)
+#                 path.pop()
+#     #if the node is a list 
+
+#     elif isinstance(document, list):
+#         for index, item in enumerate(document):
+#             #results.extend(get_dfs(item, path + [index]))
+#             yield from get_dfs(item, path )
+#     #the node is a string/integer value
 #     else:
-#         for doc in docs.children:
-#             return fetch_documents(doc)
-
-start_time =time.time()
-def get_dfs(document, path=None):
-    if path is None:
-        path=[]
-    #results =[]
-    #if the node is a dict
-    if isinstance(document, dict):
-        for key, value in document.items():
-            if key == "_id" and isinstance(value, ObjectId):
-                #results.append({"path": path + [key], "value": str(value)})
-                yield {"path": path + [key], "value": str(value)}
-            else:
-                #results.extend(get_dfs(value, path + [key]))
-                path.append(key)
-                yield from get_dfs(value, path)
-                path.pop()
-    #if the node is a list 
-
-    elif isinstance(document, list):
-        for index, item in enumerate(document):
-            #results.extend(get_dfs(item, path + [index]))
-            yield from get_dfs(item, path )
-    #the node is a string/integer value
-    else:
-        #results.append({"path": path, "value": document})
-        yield {"path": path, "value ": document}
+#         #results.append({"path": path, "value": document})
+#         yield {"path": path, "value ": document}
+#         #yield document
 
     #return results
-       
 
-@app.get("/dfs") 
-async def print_dfs():
-    doc=collection.find_one()
-    return get_dfs(doc)
      
-
-
-
-
 # @app.post("/insert")
 # def insert_document():
 #     insert_this = {
