@@ -6,6 +6,8 @@ import mysql.connector
 
 app = FastAPI()
 
+cache =[]
+
 client = pymongo.MongoClient("mongodb://localhost:27017/")
 db = client["test_posts"]
 collection = db["task1"]
@@ -18,15 +20,36 @@ connection = mysql.connector.connect(
         database="fastapi_task"
         )
 print("Connected to MySQL database")
-cur = connection.cursor()
+
  
 
 @app.get("/shippingDetails/{orderId}")
 def get_shippingDetails(orderId: str):
+    cur = connection.cursor()
     cur.execute("SELECT * FROM address WHERE orderId = %s ",(orderId,))
-    address = cur.fetchone()
+    address_fetched = cur.fetchone()
+    address = {
+        "street": address_fetched[1],
+        "city": address_fetched[2],
+        "state": address_fetched[3],
+        "postalCode": address_fetched[4],
+        "country": address_fetched[5],
+        "coordinates": {"lat, lng": address_fetched[6]},
+    } 
+
     cur.execute("SELECT * FROM method WHERE orderId = %s" ,(orderId,))
-    method = cur.fetchone()
+    method_fetched = cur.fetchone()
+    method = {
+        "carrier": method_fetched[1],
+        "serviceLevel": method_fetched[2],
+        "trackingHistory": [
+            {
+                "status": method_fetched[3],
+                "location": method_fetched[4],
+                "timestamp": method_fetched[5],
+            }
+        ],
+    }
     shippingDetails = {
         "address": address,
         "method": method
@@ -45,8 +68,7 @@ async def get_all_orders():
         orderId = order.get("orderId")
         if orderId:
             shippingDetails = get_shippingDetails(orderId)
-            order["shippingDetails"] = shippingDetails   
-             
+            order["shippingDetails"] = shippingDetails 
     return order_list
 
 
