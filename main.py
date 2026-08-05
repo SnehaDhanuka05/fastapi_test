@@ -64,11 +64,13 @@ async def get_all_orders():
         order['_id'] = str(order['_id'])  # Convert ObjectId to string
         if get_order_from_cache(order.get("orderId")):
             if get_cached_order_updated_time(order.get("orderId")) > get_actual_updated_time(order.get("orderId")):
+                get_order_from_cache(order.get("orderId"))
                 order_list.append(order)
         else:
             orderId = order.get("orderId")
             shippingDetails = await get_shippingDetails(orderId)
             order["shippingDetails"] = shippingDetails
+            order_list.append(order)
             cache_order(order)
         
     return order_list
@@ -93,14 +95,11 @@ def refresh_cache_updated_order_time(orderId: str):
 def get_cached_order_updated_time(orderId: str):
     for order in cache:
         if order["orderId"] == orderId:
-            return order.get("updated_time")
+            return str(order.get("updated_time"))
     return None
 
 def get_actual_updated_time(orderId: str):
     cur=connection.cursor()
-    cur.execute("SELECT updated_time FROM orders WHERE orderId = %s", (orderId,))
+    cur.execute("SELECT updated_time FROM order_updates WHERE orderId = %s", (orderId,))
     updated_time = cur.fetchone()
-    if updated_time:
-        return updated_time[0]
-    return None
-    
+    return updated_time[0]

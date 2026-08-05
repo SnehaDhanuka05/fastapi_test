@@ -103,28 +103,6 @@ async def convert_base64(image_url: str):
         s=base64.b64encode(img.read()).decode("utf-8")
     return s
 
-
-    
-# async def fetch_image_from_db(url:str):
-#     image_urls = get_image_urls()
-#     return image_urls.get(url)
-
-
-# @cache.cached(
-#     lambda url: url,
-#     options=CacheOptions(ttl_seconds=60, lru_max_keys=50)
-# )
-
-# async def load_image(url:str):
-#     image_data=await fetch_image_from_db(url)
-#     return image_data
-
-# async def get_image(url:str):
-#     return await load_image(url)
     
 
-# async def update_image(url:str):
-#     if load_image.cache.has(url):
-#         url.mtime!=load_image.cache.get(url).mtime
-#         load_image.cache.delete(url)
 
