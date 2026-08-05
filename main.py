@@ -2,6 +2,7 @@ from fastapi import FastAPI
 import pymongo
 import asyncio
 import mysql.connector
+import time
 
 app = FastAPI()
 
@@ -53,7 +54,6 @@ async def get_shippingDetails(orderId: str):
         "address": address,
         "method": method
     }
-    cache_shipping_details(orderId,shippingDetails)
     return shippingDetails
 
 @app.get("/orders")
@@ -64,22 +64,30 @@ async def get_all_orders():
         order['_id'] = str(order['_id'])  # Convert ObjectId to string
         order_list.append(order)
         orderId = order.get("orderId")
-        if cache_shipping_details:
-            order["shippingDetails"] = await get_cached_shipping_details(orderId)
-
-        else:
-            shippingDetails = await get_shippingDetails(orderId)
-            order["shippingDetails"] = shippingDetails
-            cache_shipping_details(orderId, shippingDetails)
-
+        shippingDetails = await get_shippingDetails(orderId)
+        order["shippingDetails"] = shippingDetails
+        cache_order(order)
     return order_list
 
-def get_cached_shipping_details(orderId: str):
+def cache_order(order):
+    cache.append(order)
+
+def get_order_from_cache(orderId: str):
     for order in cache:
         if order["orderId"] == orderId:
-            return order["shippingDetails"]
+            return order
     return None
 
-def cache_shipping_details(orderId: str, shippingDetails: dict):
-    cache.append({"orderId": orderId, "shippingDetails": shippingDetails})
+def refresh_cache_updated_order_time(orderId: str):
+    cur=connection.cursor()
+    cur.execute("SELECT updated_time FROM orders WHERE orderId = %s", (orderId,))
+    updated_time = cur.fetchone()
+    if updated_time:
+        for order in cache:
+            if order["orderId"] == orderId:
+                order["updated_time"] = updated_time[0]
+                return
+    cache.append({"orderId": orderId, "updated_time": updated_time[0]})
 
+
+    
