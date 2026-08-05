@@ -26,37 +26,32 @@ print("Connected to MySQL database")
 @app.get("/shippingDetails/{orderId}")
 async def get_shippingDetails(orderId: str):
     cur = connection.cursor()
-    cur.execute("SELECT * FROM address WHERE orderId = %s ",(orderId,))
-    address_fetched = cur.fetchone()
-    address = {
-        "street": address_fetched[1],
-        "city": address_fetched[2],
-        "state": address_fetched[3],
-        "postalCode": address_fetched[4],
-        "country": address_fetched[5],
-        "coordinates": {"lat, lng": address_fetched[6]},
-    } 
-
-    cur.execute("SELECT * FROM method WHERE orderId = %s" ,(orderId,))
-    method_fetched = cur.fetchone()
-    method = {
-        "carrier": method_fetched[1],
-        "serviceLevel": method_fetched[2],
-        "trackingHistory": [
+    cur.execute("SELECT * FROM shipping_details WHERE orderId = %s ",(orderId,))
+    shipping_fetched = cur.fetchone()
+    shipping_details = {
+        "address": {
+            "street": shipping_fetched[1],
+            "city": shipping_fetched[2],
+            "state": shipping_fetched[3],
+            "postalCode": shipping_fetched[4],
+            "country": shipping_fetched[5],
+            "coordinates": {"lat, lng": shipping_fetched[6]},
+        },
+        "method": {
+            "carrier": shipping_fetched[7],
+            "serviceLevel": shipping_fetched[8],
+            "trackingHistory": [
             {
-                "status": method_fetched[3],
-                "location": method_fetched[4],
-                "timestamp": method_fetched[5],
+                "status": shipping_fetched[9],
+                "location": shipping_fetched[10],
+                "timestamp": shipping_fetched[11],
             }
         ],
+       }
     }
-    shippingDetails = {
-        "address": address,
-        "method": method
-    }
-    return shippingDetails
+    return shipping_details
 
-@app.get("/orders")
+@app.get("/get_orders")
 async def get_all_orders():
     orders=collection.find({})
     order_list=[]
